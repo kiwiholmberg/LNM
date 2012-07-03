@@ -1,0 +1,158 @@
+<html>
+<head>
+	<script type="text/javascript" src="jquery.min.js"></script>
+	<script type="text/javascript" src="jquery.cookie.js"></script>
+	
+	<script type="text/javascript">
+		function postCheckin(key,version,type) {
+			//debug.write(key + ' ' + version);
+			$.ajax({
+			  type: "POST",
+			  url: "/checkin",
+			  data: {key: key, version: version, type: type },
+			}).done(function( msg ) {
+			  alert( "Response: " + msg );
+			});
+		}
+		
+		function postCreateCustomer(name,mail,adminuser,adminpass) {
+			//debug.write(key + ' ' + version);
+			$.ajax({
+			  type: "POST",
+			  url: "/customer",
+			  data: {adminuser: adminuser, adminpass: adminpass, name: name, mail: mail },
+			}).done(function( msg ) {
+			  //alert( "Response: " + msg );
+			  $("#createCustomerResponse").html(msg);
+			});
+		}
+		function doLogin(username,password,usecookie){
+			if (usecookie==true) {
+				username = $.cookie('pandacatuser');
+				password = $.cookie('pandacatpass');
+				if (username==null || password==null) {
+					//Well... this wont work.
+					alert("username or password is null =(" + username + password);
+					return false;
+				} 
+			} 
+			
+			$.ajax({
+			  type: "POST",
+			  url: "/dologin",
+			  data: {user: username, pass: password},
+			}).done(function( msg ) {
+			  //alert( "LoginResponse: " + msg );
+			  if (msg == 'True') {
+				$('#loginsplash').hide('slow');
+				$.cookie('pandacatuser', username, { expires: 7 });
+				$.cookie('pandacatpass', password, { expires: 7 });
+			  } else {
+				alert('Login error. (' + msg + ')');
+			  }
+			});
+		}
+		
+		//On login, look for credentials cookie.
+		$(document).ready(function() {
+		  	if ($.cookie('pandacatuser') == null || $.cookie('pandacatpass') == null ) {
+				//$("#loginsplash").show('fast');
+			} else {
+				retval = doLogin(null,null,true);
+				if (retval==false) {
+					$("#loginsplash").show('slow');
+				} else if (retval==true) {
+					$("#loginsplash").hide('slow');
+				}
+					
+			}
+			//This part is for auto refresh of customerlist.
+			setInterval(function(){
+					if ($("#customerList").is(":visible")) {						
+						refreshCustomerList();
+					}
+				},10000);
+
+			
+		});
+		function refreshCustomerList() {
+			$("#loadingAnimation").fadeIn('fast');
+			$('#customerListDynamic').load('/customer', function() {
+					$("#loadingAnimation").fadeOut('slow');
+			});
+		}
+		
+	</script>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	
+</head>
+<body>
+	
+		<div id="menu">
+			<button class="skip" onclick="$('#checkinPanel,#addCustomerPanel').hide(); refreshCustomerList(); $('#customerList').show();">Statuslista</button>
+			<button class="skip" onclick="$('#addCustomerPanel,#customerList').hide(); $('#checkinPanel').show();">Checkin</button>
+			<button class="skip" onclick="$('#checkinPanel,#customerList').hide(); $('#addCustomerPanel').show();">Skapa kund</button>
+		</div>
+	<div id="right"></div>
+	<div id="left"></div>
+
+	<div id="loginsplash">
+		<fieldset style="border: none;">
+		<div id="loginusercontainer">
+			<input type="text" id="loginuser" placeholder="Username" required></input>
+		</div>
+		<div id="loginpasscontainer">
+			<input type="password" id="loginpass" placeholder="Password" required></input>
+		</div>
+		<div id="loginbtncontainer">
+			<button type="button" id="btnlogin" class="gobutton" onclick="doLogin($('#loginuser').val(),$('#loginpass').val());">Log in</button>
+		</div>
+		</fieldset>
+	</div>
+	<div id="customerList" class="contentPanel">
+		<div id="loadingAnimationContainer">
+			<div id="loadingAnimation"></div>
+		</div>
+		<div id="customerListDynamic"></div>
+	</div><!-- Dynamic load-->
+	<div id="checkinPanel" class="contentPanel">
+		<fieldset style="border: none;">
+		<div id="keycontainer">
+			<input type="text" id="key" placeholder="Key" required></input>
+		</div>
+		<div id="typecontainer">
+			<input id="checkinClientType" type="text" placeholder="Client type ('batch' or 'lac')" required></input>				
+		</div>
+		<div id="versioncontainer">
+			<input type="text" id="version" placeholder="Version" required></input>
+		</div>
+		<div id="sendbuttoncontainer">
+			<button id="checkinbutton" onclick="postCheckin($('#keycontainer #key').val(), $('#versioncontainer #version').val(),$('#typecontainer #checkinClientType').val());">Skicka</button>
+		</div>
+		</fieldset>
+	</div>
+	<div id="addCustomerPanel" class="contentPanel">
+		<fieldset style="border: none;">
+		<div id="newNameContainer">
+			<input id="newName" type="text" placeholder="Name" required></input>				
+		</div>
+		<div id="newEmailContainer">
+			<input type="text" id="newEmail" placeholder="Notification email" required></input>
+		</div>
+		<hr style="width: 300px;"/>
+		<div id="adminUserContainer">
+			<input type="text" id="adminUser" placeholder="Admin username" required></input>
+		</div>
+		<div id="adminPassContainer">
+			<input type="text" id="adminPass" placeholder="Admin password" required></input>
+		</div>
+		<div id="newCustomerBtnContainer">
+			<button id="newCustomerBtn" onclick="postCreateCustomer($('#newName').val(),$('#newEmail').val(),$('#adminUser').val(),$('#adminPass').val());">Skicka</button>
+		</div>
+		<div id="createCustomerResponse"></div>
+		</fieldset>
+			
+	</div>
+
+</body>
+</html>
