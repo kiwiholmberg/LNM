@@ -80,7 +80,7 @@ class Customer(tornado.web.RequestHandler):
             self.write("ERROR: One or more arguments are missing.")
             return
         if isAdmin(sAdminUser, sAdminPass):
-            #Namn krävs och skall inte existera ett likadant.
+            #Name required and shall be unique.
             if sName <> "":    
                 if db.execute_rowcount("SELECT * FROM customers WHERE name = %s", (sName)) == 0:
                     #OK, create customer in database.
@@ -97,9 +97,9 @@ class Customer(tornado.web.RequestHandler):
         if db==None:
             self.write("Error while connecting to database.")
             return    
-        #List all customers and return JSON formatted. (Date_handler hack for datetime to string conversion.) Funkar!
+        #List all customers and return JSON formatted. (Date_handler hack for datetime to string conversion.) 
         #for customer in json.JSONEncoder(default=date_handler).iterencode(db.query("SELECT * from customers")):
-        #    self.write(customer)
+        #Scrap json, return html table.
         self.write("<div id='timeLastUpdated'>" + strftime("%Y-%m-%d %H:%M:%S", localtime()) + "</div>") #hidden, may be used in future.
         self.write("<table class='customerList'>")
         self.write("<tr><th>KUND</th><th>BATCH MINUTER SEN CHECKIN</th><th>LAC MINUTER SEN CHECKIN</th>")
@@ -167,7 +167,7 @@ class CreateUser(tornado.web.RequestHandler):
     def get(self):
         self.write('Get user called.')
 
-class DoLogin(tornado.web.RequestHandler):
+class DoLogin(tornado.web.RequestHandler): #Unfinished.
     def post(self):
         db = createDbConnection()
         if db==None:
@@ -179,7 +179,7 @@ class DoLogin(tornado.web.RequestHandler):
         except:
             self.write("ERROR: One or more arguments are missing.")
             return
-        if sUser != "" and sPass != "": #OBS! Man måste vara admin för att logga in atm.
+        if sUser != "" and sPass != "":
             if db.execute_rowcount("SELECT * FROM users WHERE id = %s AND password = %s AND isAdmin = 1", sUser, sPass) > 0:
                 self.write('True')
                 return

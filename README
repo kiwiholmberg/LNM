@@ -1,0 +1,5 @@
+Small API made for monitoring of remote software services. 
+
+Tornado framework is used and running with Supervisord. 
+http://tornadoweb.org
+http://supervisord.org
